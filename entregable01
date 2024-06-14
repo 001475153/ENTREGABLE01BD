@@ -1,0 +1,127 @@
+--BASE DE DATOS
+-- creacion de tabla departamento
+CREATE TABLE [PRACTICA].[dbo].[DEPARTAMENTOS] (
+    [IDDepartamento] INT PRIMARY KEY,
+    [NombreDepartamento] NVARCHAR(100),
+    [NombreGrupo] NVARCHAR(100),
+    [NombreCategoria] NVARCHAR(100)
+);
+
+  --creacion de tabla paciente
+CREATE TABLE [PRACTICA].[dbo].[PACIENTES] (
+    [IDPaciente] INT PRIMARY KEY,
+    [Apellido] NVARCHAR(100),
+    [Nombre] NVARCHAR(100),
+    [FechaNac] DATE,
+    [Sexo] CHAR(1),
+    [Peso] DECIMAL(5, 2),
+    [Altura] DECIMAL(5, 2),
+    [Vacuna] BIT
+);
+  --creacion de tabla vistapacientes
+ CREATE TABLE [PRACTICA].[dbo].[VISITASPACIENTES] (
+    [IDPaciente] INT,
+    [UltimaAdmitida] DATE,
+    [UltimaDescartada] DATE,
+    FOREIGN KEY ([IDPaciente]) REFERENCES [PRACTICA].[dbo].[PACIENTES]([IDPaciente])
+);
+
+  --crreacion de tabla adicional
+  CREATE TABLE Especialidades
+   ( id_especialidad INT PRIMARY KEY, nombre_especialidad VARCHAR(100) );
+--procedimientos almacenados
+--ejemplo 1(insertar)
+CREATE PROCEDURE InsertarDepartamento
+    @IDDepartamento INT,
+    @NombreDepartamento NVARCHAR(100),
+    @NombreGrupo NVARCHAR(100),
+    @NombreCategoria NVARCHAR(100)
+AS
+BEGIN
+    INSERT INTO [PRACTICA].[dbo].[DEPARTAMENTOS] ([IDDepartamento], [NombreDepartamento], [NombreGrupo], [NombreCategoria])
+    VALUES (@IDDepartamento, @NombreDepartamento, @NombreGrupo, @NombreCategoria);
+END;
+ --ejemplo 2 (eliminar)
+ CREATE PROCEDURE EliminarVisitaPaciente
+    @IDPaciente INT
+AS
+BEGIN
+    DELETE FROM [PRACTICA].[dbo].[VISITASPACIENTES]
+    WHERE [IDPaciente] = @IDPaciente;
+END;
+--ejemplo 3(actualizar)
+CREATE PROCEDURE ActualizarPaciente
+    @IDPaciente INT
+AS
+BEGIN
+    DELETE FROM [PRACTICA].[dbo].[VISITASPACIENTES]
+    WHERE [IDPaciente] = @IDPaciente;
+END;
+
+--funciones
+
+--obtener edad paciente
+CREATE FUNCTION ObtenerEdadPaciente (@IDPaciente INT)
+RETURNS INT
+AS
+BEGIN
+    DECLARE @Edad INT;
+    SELECT @Edad = DATEDIFF(YEAR, [FechaNac], GETDATE())
+    FROM [PRACTICA].[dbo].[PACIENTES]
+    WHERE [IDPaciente] = @IDPaciente;
+    RETURN @Edad;
+END;
+
+--obtener la ultima visita de paciente
+CREATE FUNCTION ObtenerUltimaVisitaAdmitida (@IDPaciente INT)
+RETURNS DATE
+AS
+BEGIN
+    DECLARE @UltimaVisita DATE;
+    SELECT @UltimaVisita = [UltimaAdmitida]
+    FROM [PRACTICA].[dbo].[VISITASPACIENTES]
+    WHERE [IDPaciente] = @IDPaciente;
+    RETURN @UltimaVisita;
+END;
+
+
+
+--REPOTE ESTADSTICO
+
+--numero de paciente por sexo
+
+SELECT 
+    [Sexo],
+    COUNT(*) AS NumeroPacientes
+FROM 
+    [PRACTICA].[dbo].[PACIENTES]
+GROUP BY 
+    [Sexo];
+
+
+--promedio de peso y altura 
+
+SELECT 
+    CASE 
+        WHEN DATEDIFF(YEAR, [FechaNac], GETDATE()) < 18 THEN 'Menores de 18'
+        WHEN DATEDIFF(YEAR, [FechaNac], GETDATE()) BETWEEN 18 AND 65 THEN '18-65'
+        ELSE 'Mayores de 65'
+    END AS GrupoEdad,
+    AVG([Peso]) AS PromedioPeso,
+    AVG([Altura]) AS PromedioAltura
+FROM 
+    [PRACTICA].[dbo].[PACIENTES]
+GROUP BY 
+    CASE 
+        WHEN DATEDIFF(YEAR, [FechaNac], GETDATE()) < 18 THEN 'Menores de 18'
+        WHEN DATEDIFF(YEAR, [FechaNac], GETDATE()) BETWEEN 18 AND 65 THEN '18-65'
+        ELSE 'Mayores de 65'
+    END;
+
+
+
+
+
+
+
+
